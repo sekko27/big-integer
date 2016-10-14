@@ -168,6 +168,37 @@ class BigInteger {
       return subtractOfPositives(this, other);
     }
   }
+
+  multiply(other) {
+    if (this.isZero || other.isZero) {
+      return BigInteger.ZERO;
+    }
+    const otherLength = other.realLength;
+    const thisLength = this.realLength;
+    const result = new Uint8Array(otherLength + thisLength);
+    let carry = 0;
+    for (let indexOther=0; indexOther<otherLength; indexOther++) {
+      let otherDigit = other.digits[indexOther];
+      carry = 0;
+      for (let indexThis=0; indexThis<thisLength; indexThis++) {
+        let sum = otherDigit * this.digits[indexThis] + carry + result[indexOther + indexThis];
+        carry = 0;
+        while (sum >= 10) {
+          sum -= 10;
+          carry++;
+        }
+        result[indexOther + indexThis] = sum;
+      }
+      result[indexOther + thisLength] += carry;
+    }
+    //result[otherLength + thisLength - 1] = carry;
+    return new BigInteger(result, this.negative !== other.negative);
+  }
+
+  toString() {
+    let clone = this.digits.slice(0, this.realLength);
+    return (this.negative ? "-" : "") + clone.reverse().join("");
+  }
 }
 
 BigInteger.ZERO = new BigInteger(new Uint8Array([0]));
