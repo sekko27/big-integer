@@ -1,9 +1,10 @@
+"use strict";
+
 const DIGIT_0 = "0".charCodeAt(0);
 const DIGIT_9 = "9".charCodeAt(0);
 
 function isZero(big) {
-  const length = big.length;
-  for (let i=length-1; i>=0; i++) {
+  for (let i=big.length-1; i>=0; i--) {
     if (big.digits[i] != 0) {
       return false;
     }
@@ -86,19 +87,24 @@ class BigInteger {
   static convertToArray(representation) {
     if (representation instanceof Uint8Array) {
       return representation;
-    } else if (representation instanceof String) {
+    } else if (typeof representation == 'number') {
+      return BigInteger.convertToArray(parseInt(representation).toString());
+    } else if (typeof representation == 'string') {
       const length = representation.length;
+      if (length == 0) {
+        throw new TypeError("Big integer can not be instantiated from empty string");
+      }
       const result = new Uint8Array(length);
       for (let i = 0; i < length; i++) {
-        const char = representation.charCodeAt(i)
+        const char = representation.charCodeAt(i);
         if (char < DIGIT_0 || char > DIGIT_9) {
           throw new RangeError("Decimal string representation must contain digits between 0 and 9: " + representation);
         }
-        result[length - 1 - i] = representation.charCodeAt(i)
+        result[length - 1 - i] = representation.charCodeAt(i) - DIGIT_0;
       }
       return result;
     } else {
-      throw new TypeError("Decimal representation must be string of Uint8Array");
+      throw new TypeError("Decimal representation must be string or Uint8Array");
     }
   }
 
@@ -108,14 +114,24 @@ class BigInteger {
    * @param representation String|Uint8Array Decimal representation. If it's in Uint8Array it should be reverse ordered.
    * @param negative
      */
-  constructor(representation, negative = false) {
+  constructor(representation, negative) {
     if (representation instanceof BigInteger) {
       return representation;
     }
-    this.isZero = isZero(this)
     this.digits = BigInteger.convertToArray(representation);
     this.length = this.digits.length;
-    this.negative = negative;
+    this.negative = negative === true;
+    this.isZero = isZero(this);
+  }
+
+  get realLength() {
+    for (let index = this.digits.length-1; index>=0; index--) {
+      if (this.digits[index] != 0) {
+        return index+1;
+      }
+    }
+    // All digits is zero, so it's zero
+    return 1;
   }
 
   negate() {
