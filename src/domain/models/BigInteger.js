@@ -161,7 +161,11 @@ class BigInteger {
       return this;
     }
     if (this.negative !== other.negative) {
-
+      return new BigInteger(digitsOfSumWithoutSign(this, other), this.negative);
+    } else if (this.negative) {
+      return subtractOfPositives(other, this);
+    } else {
+      return subtractOfPositives(this, other);
     }
   }
 }
